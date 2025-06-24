@@ -175,10 +175,9 @@ Shader "Hidden/PostProcessing/ColorTint"
         //half4 originColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_LinearClamp, UV);
 
         float depthUV = ClampAndScaleUVForBilinear(UnityStereoTransformScreenSpaceTex(UV), _CameraDepthTexture_TexelSize.xy);
-        SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_PointClamp, depthUV).r;
 
         #if UNITY_REVERSED_Z
-            real depth = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_PointClamp, depthUV).r;
+            real depth = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_PointClamp, UV).r;
         #else
             // Adjust Z to match NDC for OpenGL ([-1, 1])
             real depth = lerp(UNITY_NEAR_CLIP_VALUE, 1, SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_PointClamp, depthUV).r);
@@ -248,7 +247,7 @@ Shader "Hidden/PostProcessing/ColorTint"
         float depth3= SampleSceneDepth(taps[2]);
         float depth4= SampleSceneDepth(taps[3]);
 
-        float result = min(depth1,min(depth2,min(depth3,depth4)));
+        float result = max(depth1,max(depth2,max(depth3,depth4)));
         return result;
     }
 

@@ -2,15 +2,18 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Rendering.RenderGraphModule;
+using UnityEngine.Experimental.Rendering;
+using Unity.Mathematics;
 
 public class SkyCloudRenderFeature : ScriptableRendererFeature
 {
     class SkyCloudRenderPass : ScriptableRenderPass
     {
         private readonly Material _material;
-        private RTHandle _tempTexture;
-        private RTHandle _depthTexture;
-        private RTHandle _downSampleDepthTexture;
+        private RTHandle _cloudDepthTextureDiv8;
+        private RTHandle _cloudDepthTextureDiv4;
+        private RTHandle _downSampleDepth;
+        private RTHandle _cloudRenderTexture;
         private RTHandle _inputHandle;
         private SkyCloudVolume _volume;
         
@@ -32,21 +35,37 @@ public class SkyCloudRenderFeature : ScriptableRendererFeature
             _volume = VolumeManager.instance.stack.GetComponent<SkyCloudVolume>();
             if (_volume == null || !_volume.IsActive())
                 return;
-            var desc=cameraTextureDescriptor;
-            desc.depthBufferBits = 0;
-            desc.msaaSamples = 1;
-             desc.width = cameraTextureDescriptor.width / 8;
-             desc.height = cameraTextureDescriptor.height / 8;
-            desc.colorFormat = RenderTextureFormat.RFloat;
-            RenderingUtils.ReAllocateHandleIfNeeded(ref _tempTexture, desc, name: "tempTexture");
+            var descCloudDepthDiv8=cameraTextureDescriptor;
+            descCloudDepthDiv8.depthBufferBits = 0;
+            descCloudDepthDiv8.msaaSamples = 1;
+            descCloudDepthDiv8.width = cameraTextureDescriptor.width / 8;
+            descCloudDepthDiv8.height = cameraTextureDescriptor.height / 8;
+            descCloudDepthDiv8.colorFormat = RenderTextureFormat.RFloat;
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _cloudDepthTextureDiv8, descCloudDepthDiv8, name: "cloudDepthTextureDiv8");
+
+            var descCloudDepthDiv4=cameraTextureDescriptor;
+            descCloudDepthDiv4.depthBufferBits = 0;
+            descCloudDepthDiv4.msaaSamples = 1;
+            descCloudDepthDiv4.width = cameraTextureDescriptor.width / 4;
+            descCloudDepthDiv4.height = cameraTextureDescriptor.height / 4;
+            descCloudDepthDiv4.colorFormat = RenderTextureFormat.RFloat;
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _cloudDepthTextureDiv4, descCloudDepthDiv4, name: "cloudDepthTextureDiv4");
             
-            var descDepth=cameraTextureDescriptor;
-            descDepth.depthBufferBits = 0;
-            descDepth.msaaSamples = 1;
-            descDepth.width = cameraTextureDescriptor.width / 4;
-            descDepth.height = cameraTextureDescriptor.height / 4;
-            descDepth.colorFormat = RenderTextureFormat.RFloat;
-            RenderingUtils.ReAllocateHandleIfNeeded(ref _depthTexture, desc, name: "depthTexture");
+            var descDownSampleDepth=cameraTextureDescriptor;
+            descDownSampleDepth.depthBufferBits = 0;
+            descDownSampleDepth.msaaSamples = 1;
+            descDownSampleDepth.width = cameraTextureDescriptor.width / 4;
+            descDownSampleDepth.height = cameraTextureDescriptor.height / 4;
+            descDownSampleDepth.colorFormat = RenderTextureFormat.RFloat;
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _downSampleDepth, descDownSampleDepth, name: "downSampleDepth");
+
+            var descCloudRender=cameraTextureDescriptor;
+            descCloudRender.depthBufferBits = 0;
+            descCloudRender.msaaSamples = 1;
+            descCloudRender.width = cameraTextureDescriptor.width;
+            descCloudRender.height = cameraTextureDescriptor.height;
+            descCloudRender.colorFormat = RenderTextureFormat.ARGBHalf;
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _cloudRenderTexture, descCloudRender, name: "cloudRenderTexture");
         }
         
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -60,12 +79,33 @@ public class SkyCloudRenderFeature : ScriptableRendererFeature
             CommandBuffer cmd = CommandBufferPool.Get(nameof(SkyCloudRenderFeature));
             using (new ProfilingScope(cmd, _profilingSampler))
             {
-                _material.SetTexture("cloudShape",_volume.cloudBorder.value);
-                _material.SetTexture("uvNoise",_volume.uvNoise.value);
-                _material.SetTexture("cloudSDF",_volume.cloudSDF.value);
-                _material.SetTexture("noise",_volume.noise.value);
+                _material.SetTexture("_cloudBorder",_volume.cloudBorder.value);
+                _material.SetTexture("_sinTexture",_volume.sinTexture.value);
+                _material.SetTexture("_cloudSDF",_volume.cloudSDF.value);
+                _material.SetTexture("_cloudDetail",_volume.cloudDetail.value);
+                _material.SetTexture("_worlyNoise",_volume.worlyNoise.value);
+                _material.SetTexture("_cloudLightInfo1",_volume.cloudLightInfo1.value);
+                _material.SetTexture("_cloudLightInfo2",_volume.cloudLightInfo2.value);
+                _material.SetTexture("_cloudLightInfo3",_volume.cloudLightInfo3.value);
                 _material.SetVector("_boundMin",_volume.boundMin.value);
                 _material.SetVector("_boundMax",_volume.boundMax.value);
+                _material.SetVector("_lightColor1",_volume.lightColor1.value);
+                _material.SetVector("_lightColor2",_volume.lightColor2.value);
+                _material.SetVector("_cloudEmission",_volume.cloudEmission.value);
+                _material.SetVector("_NoiseParams1",_volume.NoiseParams1.value);
+                // 使用随时间变化的偏移
+                float time = Time.time;
+                // 让xyzOffset始终朝一个方向移动（例如正对角线方向）
+                Vector4 xyzOffset = new Vector4(
+                    time * 7f,
+                    time * 7f,
+                    time * 5f,
+                    0.0f
+                );
+                xyzOffset+=_volume.NoiseParams2.value;
+                _material.SetVector("_NoiseParams2",xyzOffset);
+                _material.SetVector("_AtmosphereCenter",_volume.atmosphereCenter.value);
+                _material.SetVector("_LightParams",_volume.lightParams.value);
                 var cam = renderingData.cameraData.camera;
                 float nearPlane = 1.0f;//cam.nearClipPlane; 这里设置为1，和光遇的设置保持一致，不过这样设置的原因是什么？
                 float fov = cam.fieldOfView * Mathf.Deg2Rad;
@@ -77,7 +117,7 @@ public class SkyCloudRenderFeature : ScriptableRendererFeature
     
                 // 获取相机的右向量和上向量
                 Vector3 cameraRight = cam.transform.right;
-                Vector3 cameraUp = -cam.transform.up;
+                Vector3 cameraUp = cam.transform.up;
                 Vector3 cameraForward = cam.transform.forward;
     
                 // 构建近平面向量（从中心到边缘）
@@ -88,9 +128,14 @@ public class SkyCloudRenderFeature : ScriptableRendererFeature
                 _material.SetVector("_cameraUp",upVector);
                 _material.SetVector("_bottomLeftPoint",bottomLeftPoint);
                 RTHandle cameraColorTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
-                Blitter.BlitCameraTexture(cmd, cameraColorTarget, _depthTexture,_material,1);
-                Blitter.BlitCameraTexture(cmd, _depthTexture, _tempTexture,_material,0);
-                Blitter.BlitCameraTexture(cmd, _tempTexture, cameraColorTarget);
+                Blitter.BlitCameraTexture(cmd, cameraColorTarget, _downSampleDepth,_material,0);
+                cmd.DisableShaderKeyword("_HIGH_RES_RENDER");
+                Blitter.BlitCameraTexture(cmd, _downSampleDepth, _cloudDepthTextureDiv8,_material,1);
+                cmd.EnableShaderKeyword("_HIGH_RES_RENDER");
+                _material.SetTexture("_depthTexture",_downSampleDepth);
+                Blitter.BlitCameraTexture(cmd, _cloudDepthTextureDiv8, _cloudDepthTextureDiv4,_material,1);
+                Blitter.BlitCameraTexture(cmd, _cloudDepthTextureDiv4, _cloudRenderTexture,_material,2);
+                Blitter.BlitCameraTexture(cmd, _cloudRenderTexture, cameraColorTarget,_material,3);
             }
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();

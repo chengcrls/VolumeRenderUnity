@@ -18,22 +18,55 @@ MonoBehaviour:
     m_Value: 1
   cloudBorder:
     m_OverrideState: 1
-    m_Value: {fileID: 11700000, guid: 4de6623edd41e4b41b6818ffda73ab60, type: 2}
-  noise:
+    m_Value: {fileID: 11700000, guid: 87ad740852aff954fbf69ede0bfdcb62, type: 3}
+  cloudDetail:
     m_OverrideState: 1
-    m_Value: {fileID: 11700000, guid: e526f1da01bc8c0429fffc0e42cb9eb9, type: 2}
+    m_Value: {fileID: 11700000, guid: 7b4c45db0525244449bda6711944da6d, type: 3}
   cloudSDF:
     m_OverrideState: 1
-    m_Value: {fileID: 11700000, guid: 04e549f87facfda4493ad340c3133dc5, type: 2}
-  uvNoise:
+    m_Value: {fileID: 11700000, guid: a154e08882f918d49b4491350e181792, type: 3}
+  sinTexture:
     m_OverrideState: 1
-    m_Value: {fileID: 2800000, guid: 357a7be233f824e4bb0f091ff5aaa93f, type: 3}
+    m_Value: {fileID: 2800000, guid: a832805fc9c5c2a4e8c049bddd520d88, type: 3}
+  cloudLightInfo1:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: 6ac8624f7c674f641860c3540362fba1, type: 3}
+  cloudLightInfo2:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: 9d8da1b45d4751343a119c1070c2f2fc, type: 3}
+  cloudLightInfo3:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: 1ba0aaaf72ee72741bb906c08a1ce8ed, type: 3}
+  worlyNoise:
+    m_OverrideState: 1
+    m_Value: {fileID: 11700000, guid: 5d8a07abaee92a443a3797de720c5518, type: 3}
   boundMin:
     m_OverrideState: 1
-    m_Value: {x: -289, y: -254.46, z: -439}
+    m_Value: {x: -494, y: -14, z: -670}
   boundMax:
     m_OverrideState: 1
-    m_Value: {x: 673, y: 275.54, z: 1307}
+    m_Value: {x: 468, y: 516, z: 1076}
+  lightColor1:
+    m_OverrideState: 1
+    m_Value: {x: 1, y: 0.93435, z: 0.77768}
+  lightColor2:
+    m_OverrideState: 1
+    m_Value: {x: 0.20547, y: 0.86416, z: 1.82206}
+  lightParams:
+    m_OverrideState: 1
+    m_Value: {x: 0.45626, y: 0.45626, z: 0.45626, w: 0.1}
+  cloudEmission:
+    m_OverrideState: 1
+    m_Value: {x: 0.01877, y: 0.0226, z: 0.03}
+  atmosphereCenter:
+    m_OverrideState: 1
+    m_Value: {x: 144.97269, y: 201.82625, z: -410.97577}
+  NoiseParams1:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 0, z: 0, w: 2.5}
+  NoiseParams2:
+    m_OverrideState: 1
+    m_Value: {x: 66.2, y: 259.52, z: 203, w: -0.5}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
