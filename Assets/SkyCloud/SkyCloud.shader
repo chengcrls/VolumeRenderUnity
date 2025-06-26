@@ -302,7 +302,7 @@ Shader "Unlit/SkyCloud"
         float3 worleyCoord = (((worldPos - _NoiseParams2.xyz) * scale) / 64.0) * 6.0;//这里的_boundMin是错误的
         float worleyNoise = _NoiseParams1.w * SAMPLE_TEXTURE3D(_worlyNoise,sampler_worlyNoise, worleyCoord).x;
         worleyNoise *= (1.0 + (cloudCoverage / 1.0));
-        
+        worleyNoise = 0;
         return (windEffect - worleyNoise) - cloudCoverage;
     }
 
@@ -362,12 +362,13 @@ Shader "Unlit/SkyCloud"
             roughness = detail3.y * detail3.y;
             emission = detail3.w * exp2((255.0 * detail3.z) - 128.0);
         }
+        //return detailMask;
         // 应用距离和噪声调制
         float distanceScale = 3.7 * 0.5;
         float3 distanceWorleyCoord = (((cloudPosition - _NoiseParams2.xyz) * distanceScale) / 64.0) * 6.0;
         float distanceWorley = SAMPLE_TEXTURE3D(_worlyNoise,sampler_worlyNoise, distanceWorleyCoord).x;
         
-        float luminance = dot(cloudColor, float3(0.2126, 0.7152, 0.0722));
+        float luminance = dot(cloudColor, float3(0.2126, 0.7152, 0.0722));//RGB转灰度
         cloudColor = lerp(cloudColor, luminance, float(_LightParams.w < 0.0));//这里的0.1表示什么意思
         
         float densityModulation = 1.0 + ((distanceWorley - 0.5) / (1.5 + (distance * 0.03)));
@@ -376,7 +377,7 @@ Shader "Unlit/SkyCloud"
         // 计算最终颜色
         float3 baseColor = cloudColor * lerp(_lightColor2, _lightColor1, density);
         baseColor += (_cloudEmission * emission);
-
+        //return baseColor;
         //计算角色和云的交互
         float2 cloudCoverage = 0.0;
 
@@ -404,7 +405,7 @@ Shader "Unlit/SkyCloud"
         // 组合最终光照
         float3 ambientLight = (baseColor * phaseG) * (1.0 + ((1.5 * extinction) * scattering) + (_lightColor1 * ((0.5 * density) * shadowEffect)));
         float3 directLight = (_lightColor1 * roughness) * ((shadowEffect * scattering) + ((0.5 + (0.5 * roughness)) * finalPhase));
-        float3 finalColor = _lightColor1 * (0 + ambientLight);
+        float3 finalColor = _lightColor1 * (directLight + 0);
         // 添加角色对云的影响
         finalColor += ((finalColor * float3(3.0, 0.4, 0.1)) * cloudCoverage.y);
         

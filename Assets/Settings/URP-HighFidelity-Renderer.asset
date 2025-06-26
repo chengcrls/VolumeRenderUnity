@@ -1,5 +1,21 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8794858747399920956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2311537a8d2d1ee42ab803466c72f64e, type: 3}
+  m_Name: AtmosphereScatteringRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    atmosphereShader: {fileID: 0}
+    renderPassEvent: 550
 --- !u!114 &-3606955783792104191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -86,7 +102,8 @@ MonoBehaviour:
   - {fileID: -1878332245247344467}
   - {fileID: 8418810953621872313}
   - {fileID: -3606955783792104191}
-  m_RendererFeatureMap: adc0de57c6d2eee5b99ecc21f59fd57401ed873ad384f1cd
+  - {fileID: -8794858747399920956}
+  m_RendererFeatureMap: adc0de57c6d2eee5b99ecc21f59fd57401ed873ad384f1cdc4a27dff9062f285
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}

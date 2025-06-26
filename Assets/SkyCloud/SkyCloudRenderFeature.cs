@@ -103,7 +103,8 @@ public class SkyCloudRenderFeature : ScriptableRendererFeature
                     0.0f
                 );
                 xyzOffset+=_volume.NoiseParams2.value;
-                _material.SetVector("_NoiseParams2",xyzOffset);
+                //_material.SetVector("_NoiseParams2",xyzOffset);
+                _material.SetVector("_NoiseParams2",_volume.NoiseParams2.value);
                 _material.SetVector("_AtmosphereCenter",_volume.atmosphereCenter.value);
                 _material.SetVector("_LightParams",_volume.lightParams.value);
                 var cam = renderingData.cameraData.camera;
